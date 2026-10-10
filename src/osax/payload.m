@@ -393,16 +393,18 @@ static void init_instances()
     }
 }
 
+// object_get/setInstanceVariable are unavailable in the arm64 libobjc of recent SDKs;
+// resolve the Ivar explicitly instead.
 static inline id get_ivar_value(id instance, const char *name)
 {
-    id result = nil;
-    object_getInstanceVariable(instance, name, (void **) &result);
-    return result;
+    Ivar ivar = class_getInstanceVariable(object_getClass(instance), name);
+    return ivar ? object_getIvar(instance, ivar) : nil;
 }
 
 static inline void set_ivar_value(id instance, const char *name, id value)
 {
-    object_setInstanceVariable(instance, name, value);
+    Ivar ivar = class_getInstanceVariable(object_getClass(instance), name);
+    if (ivar) object_setIvar(instance, ivar, value);
 }
 
 static inline uint64_t get_space_id(id space)
